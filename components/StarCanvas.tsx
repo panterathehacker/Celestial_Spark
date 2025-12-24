@@ -124,25 +124,18 @@ const StarCanvas: React.FC<StarCanvasProps> = ({ onStarsSelected, onProgress, is
     };
   }, [stars, selectedStars]);
 
-  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const handleCanvasInteraction = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isActive || selectedStars.length >= 5) return;
+
+    // Prevent default to stop browser specific gestures or double-firing events
+    e.preventDefault();
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
-
-    if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = (e as React.MouseEvent).clientX;
-        clientY = (e as React.MouseEvent).clientY;
-    }
-
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     // Find closest star
     let closestStar: Star | null = null;
@@ -158,7 +151,7 @@ const StarCanvas: React.FC<StarCanvasProps> = ({ onStarsSelected, onProgress, is
 
     if (closestStar) {
       const s = closestStar as Star;
-      // ALLOW selecting the same star multiple times (removed the check)
+      // ALLOW selecting the same star multiple times
       const newSelection = [...selectedStars, s];
       setSelectedStars(newSelection);
       onProgress(newSelection.length);
@@ -169,8 +162,7 @@ const StarCanvas: React.FC<StarCanvasProps> = ({ onStarsSelected, onProgress, is
     <canvas
       ref={canvasRef}
       className={`absolute top-0 left-0 w-full h-full cursor-pointer touch-none transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      onClick={handleCanvasClick}
-      onTouchStart={handleCanvasClick}
+      onPointerDown={handleCanvasInteraction}
     />
   );
 };
